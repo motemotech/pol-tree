@@ -1,4 +1,4 @@
-use crate::attr_val::*;
+use crate::abac_lab::attr_val::*;
 use std::collections::HashMap;
 
 pub struct Parser {

@@ -1,14 +1,13 @@
-mod attr_val;
-mod parser;
+mod abac_lab;
 mod cal_probabilities;
 mod cal_shannon_entropy;
 
-use parser::Parser;
+use abac_lab::parser::Parser;
 use std::fs::File;
 use std::io::prelude::*;
 
 use cal_probabilities::*;
-use attr_val::*;
+use abac_lab::attr_val::*;
 
 fn main() {
     println!("In File: {}", "data/university.abac");

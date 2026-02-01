@@ -1,4 +1,4 @@
-use crate::attr_val::*;
+use crate::abac_lab::attr_val::*;
 use std::collections::HashMap;
 
 use crate::cal_shannon_entropy::cal_shannon_entropy_from_probabilities;
