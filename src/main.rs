@@ -1,10 +1,16 @@
 mod attr_val;
 mod parser;
+mod cal_probabilities;
+mod cal_shannon_entropy;
 
 use std::env;
 use parser::Parser;
 use std::fs::File;
 use std::io::prelude::*;
+
+use cal_probabilities::*;
+use cal_shannon_entropy::*;
+use attr_val::*;
 
 fn main() {
     println!("In File: {}", "data/university.abac");
@@ -25,9 +31,26 @@ fn main() {
     println!("Parsed {} resources", parser.resources.len());
     println!("Parsed {} rules", parser.rules.len());
 
-    // デバッグ出力
-    for user in &parser.users {
-        println!("User: {:?}", user);
+    for attr_key in [
+        UserAttributeKey::Position,
+        UserAttributeKey::Department,
+        UserAttributeKey::CrsTaken,
+        UserAttributeKey::CrsTaught,
+        UserAttributeKey::IsChair,
+    ] {
+        let entropy = cal_user_attribute_entropy(&parser.users, &attr_key);
+        println!("{:?}: {:.4}", attr_key, entropy);
     }
 
+    for attr_key in [
+        ResourceAttributeKey::Type,
+        ResourceAttributeKey::Crs,
+        ResourceAttributeKey::Student,
+        ResourceAttributeKey::Departments,
+    ] {
+        let entropy = cal_resource_attribute_entropy(&parser.resources, &attr_key);
+        println!("{:?}: {:.4}", attr_key, entropy);
+    }
+
+    
 }
