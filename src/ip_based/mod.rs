@@ -1,2 +1,1 @@
-pub mod attr_val;
-pub mod parser;
+pub mod entity;
