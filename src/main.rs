@@ -3,13 +3,11 @@ mod parser;
 mod cal_probabilities;
 mod cal_shannon_entropy;
 
-use std::env;
 use parser::Parser;
 use std::fs::File;
 use std::io::prelude::*;
 
 use cal_probabilities::*;
-use cal_shannon_entropy::*;
 use attr_val::*;
 
 fn main() {
@@ -51,6 +49,5 @@ fn main() {
         let entropy = cal_resource_attribute_entropy(&parser.resources, &attr_key);
         println!("{:?}: {:.4}", attr_key, entropy);
     }
-
     
 }

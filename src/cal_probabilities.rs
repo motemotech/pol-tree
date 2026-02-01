@@ -3,7 +3,6 @@ use std::collections::HashMap;
 
 use crate::cal_shannon_entropy::cal_shannon_entropy_from_probabilities;
 
-
 fn attribute_value_to_key(value: &AttributeValue) -> String {
     match value {
         AttributeValue::String(s) => s.clone(),

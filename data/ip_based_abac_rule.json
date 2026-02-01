@@ -1,0 +1,81 @@
+{
+    "policy_name": "University_Network_Access_Policy_L3_L4",
+    "description": "IP/Port属性ベースのファイアウォールポリシー",
+    "default_effect": "deny",
+    "rules": [
+      {
+        "id": "rule_01_basic_equality",
+        "description": "【等号 (=) と論理積 (AND)】同じ学部のリソースにはアクセス許可",
+        "effect": "allow",
+        "condition": {
+          "operator": "AND",
+          "operands": [
+            { "operator": "EQ", "lhs": "Src.Dept", "rhs": "Dst.OwnerDept" },
+            { "operator": "EQ", "lhs": "Dst.Type", "rhs": "FileServer" }
+          ]
+        }
+      },
+      {
+        "id": "rule_02_inequality_trust",
+        "description": "【不等号 (>=, <)】高機密サーバへのアクセスは、信頼スコア80以上、かつ、現在のネットワーク負荷が90%未満の場合に限る",
+        "effect": "allow",
+        "condition": {
+          "operator": "AND",
+          "operands": [
+            { "operator": "GTE", "lhs": "Src.TrustScore", "rhs": 80 },
+            { "operator": "GTE", "lhs": "Dst.Sensitivity", "rhs": 7 },
+            { "operator": "LT",  "lhs": "Env.NetworkLoad", "rhs": 90 }
+          ]
+        }
+      },
+      {
+        "id": "rule_03_set_inclusion",
+        "description": "【包含関係 (IN) と論理和 (OR)】HPC(スパコン)へのアクセスは、許可されたVLANグループに属しているか、管理グループ(Admin_Grp)に属している場合のみ許可",
+        "effect": "allow",
+        "condition": {
+          "operator": "AND",
+          "operands": [
+            { "operator": "EQ", "lhs": "Dst.Type", "rhs": "HPC_Cluster" },
+            {
+              "operator": "OR",
+              "operands": [
+                { "operator": "IN", "target": "Src.Groups", "check_against": "Dst.AllowedVLANs" },
+                { "operator": "IN", "value": "Admin_Grp", "set": "Src.Groups" }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "rule_04_arithmetic_risk",
+        "description": "【算術演算 (+, *) と不等号】動的リスク計算：(宛先機密度 * 10) + 現在の同時接続数 が 信頼スコアを下回る場合のみ許可（信頼が低いと高負荷・高機密接続はできない）",
+        "effect": "allow",
+        "condition": {
+          "operator": "GT",
+          "lhs": "Src.TrustScore",
+          "rhs": {
+            "operator": "ADD",
+            "operands": [
+              {
+                "operator": "MULTIPLY",
+                "operands": ["Dst.Sensitivity", 10]
+              },
+              "Src.SessionCount"
+            ]
+          }
+        }
+      },
+      {
+        "id": "rule_05_port_range",
+        "description": "【範囲指定 (Range) と否定 (NOT)】ウェルノウンポート(0-1023)以外のアクセスは、ゲスト(Guest)には許可しない",
+        "effect": "deny",
+        "condition": {
+          "operator": "AND",
+          "operands": [
+            { "operator": "EQ", "lhs": "Src.Role", "rhs": "Guest" },
+            { "operator": "GT", "lhs": "Env.DestPort", "rhs": 1023 }
+          ]
+        }
+      }
+    ]
+  }
