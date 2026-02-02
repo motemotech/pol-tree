@@ -6,10 +6,12 @@ mod ip_based;
 use abac_lab::parser::Parser;
 use std::fs::File;
 use std::io::prelude::*;
+use std::collections::HashMap;
 
 use cal_probabilities::*;
 use abac_lab::attr_val::*;
-use ip_based::entity::*;
+use ip_based::entity::{AttributeValue, SourceEntity, DestinationEntity};
+use ip_based::rule::*;
 
 use serde_json::Value;
 
@@ -18,55 +20,106 @@ fn main() {
     let json_str = std::fs::read_to_string("data/ip_based_abac_entity.json").expect("File not found");
     let json: Value = serde_json::from_str(&json_str).expect("JSON parse error");
 
-    if let Some(Value::Array(source_entities)) = json.get("source_entities") {
-        for entity in source_entities {
-            let entity = SourceEntity::from_json_value(entity).expect("Failed to parse source entity");
-            println!("{:?}", entity);
+    let mut source_entities: Vec<SourceEntity> = Vec::new();
+    if let Some(Value::Array(source_array)) = json.get("source_entities") {
+        for entity in source_array {
+            match SourceEntity::from_json_value(entity) {
+                Ok(entity) => source_entities.push(entity),
+                Err(e) => eprintln!("Failed to parse source entity: {}", e),
+            }
         }
     }
 
-    if let Some(Value::Array(destination_entities)) = json.get("destination_entities") {
-        for entity in destination_entities {
-            let entity = DestinationEntity::from_json_value(entity).expect("Failed to parse destination entity");
-            println!("{:?}", entity);
+    let mut destination_entities: Vec<DestinationEntity> = Vec::new();
+    if let Some(Value::Array(dest_array)) = json.get("destination_entities") {
+        for entity in dest_array {
+            match DestinationEntity::from_json_value(entity) {
+                Ok(entity) => destination_entities.push(entity),
+                Err(e) => eprintln!("Failed to parse destination entity: {}", e),
+            }
         }
     }
 
-    // let mut file = File::open("data/university.abac").expect("File not found");
+    println!("Loaded {} source entities", source_entities.len());
+    println!("Loaded {} destination entities", destination_entities.len());
 
-    // let mut contents = String::new();
-    // file.read_to_string(&mut contents).expect("There was an error reading the file");
-
-    // let mut parser = Parser::new();
-    // for line in contents.lines() {
-    //     if let Err(e) = parser.parse_line(line) {
-    //         eprintln!("Error parsing line '{}' : {}", line, e);
-    //     }
-    // }
-
-    // println!("\nParsed {} users", parser.users.len());
-    // println!("Parsed {} resources", parser.resources.len());
-    // println!("Parsed {} rules", parser.rules.len());
-
-    // for attr_key in [
-    //     UserAttributeKey::Position,
-    //     UserAttributeKey::Department,
-    //     UserAttributeKey::CrsTaken,
-    //     UserAttributeKey::CrsTaught,
-    //     UserAttributeKey::IsChair,
-    // ] {
-    //     let entropy = cal_user_attribute_entropy(&parser.users, &attr_key);
-    //     println!("{:?}: {:.4}", attr_key, entropy);
-    // }
-
-    // for attr_key in [
-    //     ResourceAttributeKey::Type,
-    //     ResourceAttributeKey::Crs,
-    //     ResourceAttributeKey::Student,
-    //     ResourceAttributeKey::Departments,
-    // ] {
-    //     let entropy = cal_resource_attribute_entropy(&parser.resources, &attr_key);
-    //     println!("{:?}: {:.4}", attr_key, entropy);
-    // }
+    // 2. ポリシーを読み込む
+    println!("\n=== Loading Policy ===");
+    let policy_str = std::fs::read_to_string("data/ip_based_abac_rule.json")
+        .expect("Policy file not found");
+    let policy_json: Value = serde_json::from_str(&policy_str)
+        .expect("Policy JSON parse error");
     
+    let policy = Policy::from_json_value(&policy_json)
+        .expect("Failed to parse policy");
+    
+    println!("Policy: {}", policy.policy_name);
+    println!("Description: {}", policy.description);
+    println!("Default effect: {:?}", policy.default_effect);
+    println!("Number of rules: {}", policy.rules.len());
+
+    // 3. 環境変数を設定
+    let mut env = HashMap::new();
+    env.insert("Env.NetworkLoad".to_string(), AttributeValue::Number(85));
+    env.insert("Env.DestPort".to_string(), AttributeValue::Number(8080));
+
+    // 4. 各ソース・デスティネーションの組み合わせに対してポリシーを適用
+    println!("\n=== Applying Policy ===");
+    
+    // テスト用に最初の数件だけ評価（全組み合わせは多いので）
+    let test_source_count = source_entities.len().min(3);
+    let test_dest_count = destination_entities.len().min(3);
+    
+    for (i, source) in source_entities.iter().take(test_source_count).enumerate() {
+        for (j, dest) in destination_entities.iter().take(test_dest_count).enumerate() {
+            println!("\n--- Test Case {}: {} -> {} ---", 
+                i * test_dest_count + j + 1,
+                source.ip, dest.ip);
+            
+            // ポリシーを評価
+            let result = evaluate_policy(&policy, source, dest, &env);
+            
+            match result {
+                Ok(effect) => {
+                    match effect {
+                        Effect::Allow => println!("  ✓ Access ALLOWED"),
+                        Effect::Deny => println!("  ✗ Access DENIED"),
+                    }
+                }
+                Err(e) => {
+                    println!("  ⚠ Error evaluating policy: {}", e);
+                }
+            }
+        }
+    }
+}
+
+/// ポリシーを評価して、最終的な効果（Allow/Deny）を返す
+fn evaluate_policy(
+    policy: &Policy,
+    source: &SourceEntity,
+    destination: &DestinationEntity,
+    env: &HashMap<String, AttributeValue>,
+) -> Result<Effect, String> {
+    // ルールを順番に評価
+    for rule in &policy.rules {
+        match rule.matches(source, destination, env) {
+            Ok(true) => {
+                // ルールの条件が満たされた場合、そのルールの効果を返す
+                println!("    Rule '{}' matched: {}", rule.id, rule.description);
+                return Ok(rule.effect.clone());
+            }
+            Ok(false) => {
+                // 条件が満たされなかった場合、次のルールをチェック
+                continue;
+            }
+            Err(e) => {
+                // エラーが発生した場合、そのエラーを返す
+                return Err(format!("Error evaluating rule '{}': {}", rule.id, e));
+            }
+        }
+    }
+    
+    // どのルールにもマッチしなかった場合、デフォルトの効果を返す
+    Ok(policy.default_effect.clone())
 }
