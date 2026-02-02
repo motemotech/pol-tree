@@ -67,8 +67,8 @@ fn main() {
     println!("\n=== Applying Policy ===");
     
     // テスト用に最初の数件だけ評価（全組み合わせは多いので）
-    let test_source_count = source_entities.len().min(3);
-    let test_dest_count = destination_entities.len().min(3);
+    let test_source_count = source_entities.len().min(20);
+    let test_dest_count = destination_entities.len().min(20);
     
     for (i, source) in source_entities.iter().take(test_source_count).enumerate() {
         for (j, dest) in destination_entities.iter().take(test_dest_count).enumerate() {
