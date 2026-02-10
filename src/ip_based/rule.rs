@@ -310,6 +310,112 @@ impl Condition {
             _ => Err("Comparison requires numbers".to_string()),
         }
     }
+
+    pub fn references_dst(&self) -> bool {
+        match self {
+            Condition::And { operands } | Condition::Or { operands } => {
+                operands.iter().any(|c| c.references_dst())
+            }
+            Condition::Eq { lhs, rhs }
+            | Condition::Gte { lhs, rhs }
+            | Condition::Gt {lhs, rhs}
+            | Condition::Lt {lhs, rhs} => lhs.references_dst() || rhs.references_dst(),
+            Condition::In { target, check_against } => {
+                target.references_dst() || check_against.references_dst()
+            }
+            Condition::InSet { value, set } => value.references_dst() || set.references_dst(),
+        }
+    }
+
+    pub fn evaluate_dest_only(
+        &self,
+        dest_entity: &DestinationEntity,
+    ) -> Result<bool, String> {
+        use std::collections::HashMap;
+        let empty_env = HashMap::new();
+        let dummy_source = SourceEntity {
+            ip: String::new(),
+            attributes: HashMap::new(),
+            desc: None,
+        };
+
+        match self {
+            Condition::And { operands } => {
+                for c in operands {
+                    if c.references_dst() && !c.evaluate_dest_only(dest_entity)? {
+                        return Ok(false);
+                    }
+                }
+                Ok(true)
+            }
+            Condition::Or { operands } => {
+                let mut has_dst = false;
+                for c in operands {
+                    if c.references_dst() {
+                        has_dst = true;
+                        if c.evaluate_dest_only(dest_entity)? {
+                            return Ok(true);
+                        }
+                    }
+                }
+                Ok(!has_dst)
+            }
+            Condition::Eq { lhs, rhs } => {
+                if lhs.references_src_or_env() || rhs.references_src_or_env() {
+                    return Ok(true);
+                }
+                let l = lhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                let r = rhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                Ok(l == r)
+            }
+            Condition::Gte { lhs, rhs } => {
+                if lhs.references_src_or_env() || rhs.references_src_or_env() {
+                    return Ok(true);
+                }
+                let l = lhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                let r = rhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                Self::compare_values(&l, &r, |a, b| a >= b)
+            }
+            Condition::Gt { lhs, rhs } => {
+                if lhs.references_src_or_env() || rhs.references_src_or_env() {
+                    return Ok(true);
+                }
+                let l = lhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                let r = rhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                Self::compare_values(&l, &r, |a, b| a > b)
+            }
+            Condition::Lt { lhs, rhs } => {
+                if lhs.references_src_or_env() || rhs.references_src_or_env() {
+                    return Ok(true);
+                }
+                let l = lhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                let r = rhs.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                Self::compare_values(&l, &r, |a, b| a < b)
+            }
+            Condition::In { target, check_against } => {
+                if target.references_src_or_env() || check_against.references_src_or_env() {
+                    return Ok(true);
+                }
+                let t = target.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                let c = check_against.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                match (&t, &c) {
+                    (AttributeValue::String(s), AttributeValue::Set(set)) => Ok(set.contains(s)),
+                    _ => Err("IN operator requires String and Set".to_string()),
+                }
+            }
+            Condition::InSet { value, set } => {
+                if value.references_src_or_env() || set.references_src_or_env() {
+                    return Ok(true);
+                }
+                let v = value.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                let s = set.evaluate(&dummy_source, dest_entity, &empty_env)?;
+                match (&v, &s) {
+                    (AttributeValue::String(st), AttributeValue::Set(set)) => Ok(set.contains(st)),
+                    _ => Err("IN operator requires String and Set".to_string()),
+                }
+            }
+        }
+    }
 }
 
 impl Expression {
@@ -470,6 +576,27 @@ impl Expression {
                 .cloned()
                 .ok_or_else(|| format!("Attribute not found: {}", attr_name)),
             _ => Err(format!("Unknown destination attribute: {}", attr_name)),
+        }
+    }
+
+    pub fn references_dst(&self) -> bool {
+        match self {
+            Expression::AttributeRef(name) => name.starts_with("Dst."),
+            // 以下の実装は何？
+            Expression::Add { operands } | Expression::Multiply { operands } => {
+                operands.iter().any(|e| e.references_dst())
+            }
+            _ => false,
+        }
+    }
+
+    pub fn references_src_or_env(&self) -> bool {
+        match self {
+            Expression::AttributeRef(name) => name.starts_with("Src.") || name.starts_with("Env."),
+            Expression::Add { operands } | Expression::Multiply { operands } => {
+                operands.iter().any(|e| e.references_src_or_env())
+            }
+            _ => false,
         }
     }
 }

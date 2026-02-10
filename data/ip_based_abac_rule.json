@@ -17,14 +17,13 @@
       },
       {
         "id": "rule_02_inequality_trust",
-        "description": "【不等号 (>=, <)】高機密サーバへのアクセスは、信頼スコア80以上、かつ、現在のネットワーク負荷が90%未満の場合に限る",
+        "description": "【不等号 (>=, <)】高機密サーバへのアクセスは、信頼スコア80以上",
         "effect": "allow",
         "condition": {
           "operator": "AND",
           "operands": [
             { "operator": "GTE", "lhs": "Src.TrustScore", "rhs": 80 },
-            { "operator": "GTE", "lhs": "Dst.Sensitivity", "rhs": 7 },
-            { "operator": "LT",  "lhs": "Env.NetworkLoad", "rhs": 90 }
+            { "operator": "GTE", "lhs": "Dst.Sensitivity", "rhs": 7 }
           ]
         }
       },
@@ -47,26 +46,7 @@
         }
       },
       {
-        "id": "rule_04_arithmetic_risk",
-        "description": "【算術演算 (+, *) と不等号】動的リスク計算：(宛先機密度 * 10) + 現在の同時接続数 が 信頼スコアを下回る場合のみ許可（信頼が低いと高負荷・高機密接続はできない）",
-        "effect": "allow",
-        "condition": {
-          "operator": "GT",
-          "lhs": "Src.TrustScore",
-          "rhs": {
-            "operator": "ADD",
-            "operands": [
-              {
-                "operator": "MULTIPLY",
-                "operands": ["Dst.Sensitivity", 10]
-              },
-              "Src.SessionCount"
-            ]
-          }
-        }
-      },
-      {
-        "id": "rule_05_port_range",
+        "id": "rule_04_port_range",
         "description": "【範囲指定 (Range) と否定 (NOT)】ウェルノウンポート(0-1023)以外のアクセスは、ゲスト(Guest)には許可しない",
         "effect": "deny",
         "condition": {
