@@ -31,15 +31,15 @@ struct LoadedData {
 
 fn main() {
     let data = load_entities_and_policy();
-    let applicable_policies = list_applicable_policies_per_dest_entity(
+    let applicable_rules = list_applicable_rules_per_dest_entity(
         &[data.policy],
         &data.destination_entities,
     );
     println!("Applicable policies per destination entity:");
-    for (dest_ip, rules) in applicable_policies {
+    for (dest_ip, rules) in applicable_rules {
         println!("Destination IP: {}", dest_ip);
-        for (policy_name, rule_id) in rules {
-            println!("  - {} / {}", policy_name, rule_id);
+        for rule_id in rules {
+            println!("  {}", rule_id);
         }
     }
     // apply_policy_rules(&data);
