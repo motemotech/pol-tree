@@ -58,10 +58,7 @@ fn main() {
         let bits = encoded_source_to_bit_arrays(&attr_id, &encoded, &source_attr_order).expect("bit arrays");
         println!("Source {}: {:?}", src.ip, bits);
     }
-    // for dest in &data.destination_entities {
-    //     let encoded = encode_destination_entity(&attr_id, dest).expect("encode destination");
-    //     println!("Destination {}: {:?}", dest.ip, encoded);
-    // }
+
 }
 
 fn load_entities_and_policy() -> LoadedData {

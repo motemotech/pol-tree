@@ -211,14 +211,14 @@ pub fn encoded_source_to_bit_arrays(
     map: &AttrIdMap,
     encoded: &HashMap<SourceEntityAttributeKey, EncodedAttributeValue>,
     attr_order: &[&str],
-) -> Result<String, String> {
-    let mut out = String::with_capacity(attr_order.len());
+) -> Result<Vec<String>, String> {
+    let mut out = Vec::with_capacity(attr_order.len());
     for &name in attr_order {
         let key = SourceEntity::parse_attribute_key(name)?;
         let Some(val) = encoded.get(&key) else { continue };
         let entry = map.entries.get(name).ok_or_else(|| format!("Unknown attr: {}", name))?;
         let u = encoded_value_to_u32(entry, val)?;
-        out.push_str(&u32_to_bit_string(u));
+        out.push(u32_to_bit_string(u));
     }
     Ok(out)
 }
