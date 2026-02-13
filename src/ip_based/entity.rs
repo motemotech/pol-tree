@@ -99,7 +99,7 @@ impl SourceEntity {
         })
     }
 
-    fn parse_attribute_key(key: &str) -> Result<SourceEntityAttributeKey, String> {
+    pub fn parse_attribute_key(key: &str) -> Result<SourceEntityAttributeKey, String> {
         match key {
             "Src.Role" => Ok(SourceEntityAttributeKey::Role),
             "Src.Dept" => Ok(SourceEntityAttributeKey::Dept),
@@ -158,7 +158,7 @@ impl DestinationEntity {
         })
     }
 
-    fn parse_attribute_key(key: &str) -> Result<DestinationEntityAttributeKey, String> {
+    pub fn parse_attribute_key(key: &str) -> Result<DestinationEntityAttributeKey, String> {
         match key {
             "Dst.Type" => Ok(DestinationEntityAttributeKey::Type),
             "Dst.OwnerDept" => Ok(DestinationEntityAttributeKey::OwnerDept),

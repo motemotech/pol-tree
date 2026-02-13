@@ -174,3 +174,51 @@ pub fn encode_destination_entity(
     }
     Ok(out)
 }
+
+pub fn encoded_value_to_u32(
+    entry: &AttrIdEntry,
+    v: &EncodedAttributeValue,
+) -> Result<u32, String> {
+    match (entry, v) {
+        (AttrIdEntry { value_type: AttrValueType::Single, .. }, EncodedAttributeValue::SingleId(id)) => {
+            Ok(*id)
+        }
+        (AttrIdEntry { value_type: AttrValueType::Numeric, .. }, EncodedAttributeValue::Numeric(n)) => {
+            if *n < 0 || *n > u32::MAX as i64 {
+                return Err(format!("Numeric value {} out of u32 range", n));
+            }
+            Ok(*n as u32)
+        }
+        (AttrIdEntry { value_type: AttrValueType::Multiple, .. }, EncodedAttributeValue::MultipleIds(ids)) => {
+            let mut bits = 0u32;
+            for &id in ids {
+                if id >= 32 {
+                    return Err(format!("Multiple id {} does not fit in 32 bits", id));
+                }
+                bits |= 1u32 << id;
+            }
+            Ok(bits)
+        }
+        _ => Err(format!("Type mismatch in encoded_value_to_u32: entry={:?}, value={:?}", entry.value_type, v)),
+    }
+}
+
+pub fn u32_to_bit_string(b: u32) -> String {
+    (0..32).rev().map(|i| if (b >> i) & 1 == 1 { '1' } else { '0' }).collect()
+}
+
+pub fn encoded_source_to_bit_arrays(
+    map: &AttrIdMap,
+    encoded: &HashMap<SourceEntityAttributeKey, EncodedAttributeValue>,
+    attr_order: &[&str],
+) -> Result<String, String> {
+    let mut out = String::with_capacity(attr_order.len());
+    for &name in attr_order {
+        let key = SourceEntity::parse_attribute_key(name)?;
+        let Some(val) = encoded.get(&key) else { continue };
+        let entry = map.entries.get(name).ok_or_else(|| format!("Unknown attr: {}", name))?;
+        let u = encoded_value_to_u32(entry, val)?;
+        out.push_str(&u32_to_bit_string(u));
+    }
+    Ok(out)
+}

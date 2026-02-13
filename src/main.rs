@@ -45,16 +45,23 @@ fn main() {
     }
 
     let attr_id = AttrIdMap::load("data/ip_based_abac_attr_id.json").expect("attr_id load");
+
+    let source_attr_order = [
+        "Src.Role",
+        "Src.Dept",
+        "Src.TrustScore",
+        "Src.Groups"
+    ];
+
     for src in &data.source_entities {
         let encoded = encode_source_entity(&attr_id, src).expect("encode source");
-        println!("Source {}: {:?}", src.ip, encoded);
+        let bits = encoded_source_to_bit_arrays(&attr_id, &encoded, &source_attr_order).expect("bit arrays");
+        println!("Source {}: {:?}", src.ip, bits);
     }
-    for dest in &data.destination_entities {
-        let encoded = encode_destination_entity(&attr_id, dest).expect("encode destination");
-        println!("Destination {}: {:?}", dest.ip, encoded);
-    }
-    // apply_policy_rules(&data);
-    // calculate_entropies(&data.source_entities, &data.destination_entities);
+    // for dest in &data.destination_entities {
+    //     let encoded = encode_destination_entity(&attr_id, dest).expect("encode destination");
+    //     println!("Destination {}: {:?}", dest.ip, encoded);
+    // }
 }
 
 fn load_entities_and_policy() -> LoadedData {
