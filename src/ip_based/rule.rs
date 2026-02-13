@@ -421,9 +421,7 @@ impl Condition {
 impl Expression {
     pub fn from_json_value(value: &Value) -> Result<Self, String> {
         match value {
-            // 文字列リテラル
             Value::String(s) => {
-                // 属性参照か環境変数参照かを判定
                 if s.starts_with("Src.") || s.starts_with("Dst.") {
                     Ok(Expression::AttributeRef(s.clone()))
                 } else if s.starts_with("Env.") {
@@ -433,14 +431,12 @@ impl Expression {
                 }
             }
             
-            // 数値リテラル
             Value::Number(n) => {
                 n.as_i64()
                     .ok_or_else(|| format!("Cannot convert to i64: {}", n))
                     .map(Expression::LiteralNumber)
             }
             
-            // オブジェクト（算術演算など）
             Value::Object(obj) => {
                 if let Some(op) = obj.get("operator").and_then(|v| v.as_str()) {
                     match op {
@@ -481,7 +477,7 @@ impl Expression {
         &self,
         source: &SourceEntity,
         destination: &DestinationEntity,
-        env: &HashMap<String, AttributeValue>, // 環境変数（Env.NetworkLoadなど）
+        env: &HashMap<String, AttributeValue>,
     ) -> Result<AttributeValue, String> {
         match self {
             Expression::LiteralString(s) => Ok(AttributeValue::String(s.clone())),

@@ -1,0 +1,139 @@
+{
+  "Src.Role": {
+    "description": {
+      "type": "single"
+    },
+    "value": {
+      "0": "Student",
+      "1": "Professor",
+      "2": "Admin",
+      "3": "Staff",
+      "4": "Guest",
+      "5": "Vendor"
+    }
+  },
+  "Src.Dept": {
+    "description": {
+      "type": "single"
+    },
+    "value": {
+      "0": "CS",
+      "1": "Bio",
+      "2": "Art",
+      "3": "Eng",
+      "4": "Med",
+      "5": "Law",
+      "6": "IT_Support",
+      "7": "HR",
+      "8": "AdminOffice",
+      "9": "Library",
+      "10": "Visitor",
+      "11": "Ext_Company"
+    }
+  },
+  "Src.TrustScore": {
+    "description": {
+      "type": "numeric"
+    },
+    "value": {
+      "min": 5,
+      "max": 99
+    }
+  },
+  "Src.Groups": {
+    "description": {
+      "type": "multiple"
+    },
+    "value": {
+      "0": "Undergrad",
+      "1": "WiFi_Users",
+      "2": "Grad_Research",
+      "3": "Lab_Net_A",
+      "4": "Probation",
+      "5": "Med_Student",
+      "6": "Hospital_Guest",
+      "7": "Library_User",
+      "8": "Faculty",
+      "9": "Admin_Grp",
+      "10": "Research_Lead",
+      "11": "Bio_Lab_Head",
+      "12": "Ind_Coop_Project",
+      "13": "SysAdmin",
+      "14": "Root_Access",
+      "15": "Staff",
+      "16": "HR_Manager",
+      "17": "Office_Net",
+      "18": "Librarian",
+      "19": "Guest_WiFi",
+      "20": "Conf_Room_A",
+      "21": "Vendor_VPN",
+      "22": "Maint_Group"
+    }
+  },
+  "Dst.Type": {
+    "description": {
+      "type": "single"
+    },
+    "value": {
+      "0": "WebServer",
+      "1": "Portal",
+      "2": "LMS",
+      "3": "LibraryDB",
+      "4": "Printer",
+      "5": "Database",
+      "6": "FileServer",
+      "7": "HPC_Cluster",
+      "8": "GPU_Cluster",
+      "9": "IoT_Gateway",
+      "10": "RenderFarm",
+      "11": "AuthServer",
+      "12": "SwitchMgmt",
+      "13": "BackupServer",
+      "14": "TestServer"
+    }
+  },
+  "Dst.OwnerDept": {
+    "description": {
+      "type": "single"
+    },
+    "value": {
+      "0": "AdminOffice",
+      "1": "IT_Support",
+      "2": "Library",
+      "3": "CS",
+      "4": "HR",
+      "5": "Bio",
+      "6": "Eng",
+      "7": "Art"
+    }
+  },
+  "Dst.Sensitivity": {
+    "description": {
+      "type": "numeric"
+    },
+    "value": {
+      "min": 1,
+      "max": 10
+    }
+  },
+  "Dst.AllowedVLANs": {
+    "description": {
+      "type": "multiple"
+    },
+    "value": {
+      "0": "Any",
+      "1": "Any_Authenticated",
+      "2": "Staff",
+      "3": "Faculty",
+      "4": "Grad_Research",
+      "5": "HR_Manager",
+      "6": "Collaborator",
+      "7": "Bio_Lab_Head",
+      "8": "Bio_Project_X",
+      "9": "Lab_Net_A",
+      "10": "Art_Students",
+      "11": "SysAdmin",
+      "12": "Backup_Service"
+    }
+  }
+}

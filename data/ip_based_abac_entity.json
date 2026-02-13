@@ -1,28 +1,28 @@
 {
     "source_entities": [
-      { "ip": "10.10.10.1", "attributes": { "Src.Role": "Student", "Src.Dept": "CS", "Src.TrustScore": 50, "Src.Groups": ["Undergrad", "WiFi_Users"], "Src.SessionCount": 5 }, "desc": "標準的なCS学部生" },
-      { "ip": "10.10.10.2", "attributes": { "Src.Role": "Student", "Src.Dept": "Bio", "Src.TrustScore": 45, "Src.Groups": ["Undergrad", "WiFi_Users"], "Src.SessionCount": 3 }, "desc": "標準的なBio学部生" },
-      { "ip": "10.10.10.3", "attributes": { "Src.Role": "Student", "Src.Dept": "Art", "Src.TrustScore": 40, "Src.Groups": ["Undergrad", "WiFi_Users"], "Src.SessionCount": 12 }, "desc": "動画視聴等でセッション多めの学生" },
-      { "ip": "10.10.20.5", "attributes": { "Src.Role": "Student", "Src.Dept": "CS", "Src.TrustScore": 85, "Src.Groups": ["Grad_Research", "Lab_Net_A"], "Src.SessionCount": 8 }, "desc": "信頼度の高い大学院生（固定IP）" },
-      { "ip": "10.10.20.6", "attributes": { "Src.Role": "Student", "Src.Dept": "Eng", "Src.TrustScore": 20, "Src.Groups": ["Undergrad", "Probation"], "Src.SessionCount": 2 }, "desc": "ペナルティ中の学生（スコア低）" },
-      { "ip": "10.10.99.9", "attributes": { "Src.Role": "Student", "Src.Dept": "CS", "Src.TrustScore": 10, "Src.Groups": ["WiFi_Users"], "Src.SessionCount": 150 }, "desc": "【異常】マルウェア感染疑いの学生PC（セッション過多）" },
-      { "ip": "10.10.15.1", "attributes": { "Src.Role": "Student", "Src.Dept": "Med", "Src.TrustScore": 60, "Src.Groups": ["Med_Student", "Hospital_Guest"], "Src.SessionCount": 4 }, "desc": "医学部生" },
-      { "ip": "10.10.15.2", "attributes": { "Src.Role": "Student", "Src.Dept": "Law", "Src.TrustScore": 55, "Src.Groups": ["Undergrad", "Library_User"], "Src.SessionCount": 1 }, "desc": "法学部生" },
+      { "ip": "10.10.10.1", "attributes": { "Src.Role": "Student", "Src.Dept": "CS", "Src.TrustScore": 50, "Src.Groups": ["Undergrad", "WiFi_Users"] }, "desc": "標準的なCS学部生" },
+      { "ip": "10.10.10.2", "attributes": { "Src.Role": "Student", "Src.Dept": "Bio", "Src.TrustScore": 45, "Src.Groups": ["Undergrad", "WiFi_Users"] }, "desc": "標準的なBio学部生" },
+      { "ip": "10.10.10.3", "attributes": { "Src.Role": "Student", "Src.Dept": "Art", "Src.TrustScore": 40, "Src.Groups": ["Undergrad", "WiFi_Users"] }, "desc": "動画視聴等でセッション多めの学生" },
+      { "ip": "10.10.20.5", "attributes": { "Src.Role": "Student", "Src.Dept": "CS", "Src.TrustScore": 85, "Src.Groups": ["Grad_Research", "Lab_Net_A"] }, "desc": "信頼度の高い大学院生（固定IP）" },
+      { "ip": "10.10.20.6", "attributes": { "Src.Role": "Student", "Src.Dept": "Eng", "Src.TrustScore": 20, "Src.Groups": ["Undergrad", "Probation"] }, "desc": "ペナルティ中の学生（スコア低）" },
+      { "ip": "10.10.99.9", "attributes": { "Src.Role": "Student", "Src.Dept": "CS", "Src.TrustScore": 10, "Src.Groups": ["WiFi_Users"] }, "desc": "【異常】マルウェア感染疑いの学生PC（セッション過多）" },
+      { "ip": "10.10.15.1", "attributes": { "Src.Role": "Student", "Src.Dept": "Med", "Src.TrustScore": 60, "Src.Groups": ["Med_Student", "Hospital_Guest"] }, "desc": "医学部生" },
+      { "ip": "10.10.15.2", "attributes": { "Src.Role": "Student", "Src.Dept": "Law", "Src.TrustScore": 55, "Src.Groups": ["Undergrad", "Library_User"] }, "desc": "法学部生" },
       
-      { "ip": "10.20.50.1", "attributes": { "Src.Role": "Professor", "Src.Dept": "CS", "Src.TrustScore": 95, "Src.Groups": ["Faculty", "Admin_Grp", "Research_Lead"], "Src.SessionCount": 10 }, "desc": "CS学部長クラス。権限最強" },
-      { "ip": "10.20.50.2", "attributes": { "Src.Role": "Professor", "Src.Dept": "Bio", "Src.TrustScore": 90, "Src.Groups": ["Faculty", "Bio_Lab_Head"], "Src.SessionCount": 5 }, "desc": "Bio学部教授" },
-      { "ip": "10.20.50.3", "attributes": { "Src.Role": "Professor", "Src.Dept": "Art", "Src.TrustScore": 88, "Src.Groups": ["Faculty"], "Src.SessionCount": 20 }, "desc": "Art学部教授" },
-      { "ip": "10.20.50.4", "attributes": { "Src.Role": "Professor", "Src.Dept": "Eng", "Src.TrustScore": 92, "Src.Groups": ["Faculty", "Ind_Coop_Project"], "Src.SessionCount": 15 }, "desc": "産学連携プロジェクトを持つ教授" },
+      { "ip": "10.20.50.1", "attributes": { "Src.Role": "Professor", "Src.Dept": "CS", "Src.TrustScore": 95, "Src.Groups": ["Faculty", "Admin_Grp", "Research_Lead"] }, "desc": "CS学部長クラス。権限最強" },
+      { "ip": "10.20.50.2", "attributes": { "Src.Role": "Professor", "Src.Dept": "Bio", "Src.TrustScore": 90, "Src.Groups": ["Faculty", "Bio_Lab_Head"] }, "desc": "Bio学部教授" },
+      { "ip": "10.20.50.3", "attributes": { "Src.Role": "Professor", "Src.Dept": "Art", "Src.TrustScore": 88, "Src.Groups": ["Faculty"] }, "desc": "Art学部教授" },
+      { "ip": "10.20.50.4", "attributes": { "Src.Role": "Professor", "Src.Dept": "Eng", "Src.TrustScore": 92, "Src.Groups": ["Faculty", "Ind_Coop_Project"] }, "desc": "産学連携プロジェクトを持つ教授" },
     
-      { "ip": "10.90.1.10", "attributes": { "Src.Role": "Admin", "Src.Dept": "IT_Support", "Src.TrustScore": 99, "Src.Groups": ["SysAdmin", "Root_Access"], "Src.SessionCount": 3 }, "desc": "ネットワーク管理者端末" },
-      { "ip": "10.90.1.20", "attributes": { "Src.Role": "Admin", "Src.Dept": "HR", "Src.TrustScore": 85, "Src.Groups": ["Staff", "HR_Manager"], "Src.SessionCount": 2 }, "desc": "人事システム管理者" },
-      { "ip": "10.90.1.30", "attributes": { "Src.Role": "Staff", "Src.Dept": "AdminOffice", "Src.TrustScore": 70, "Src.Groups": ["Staff", "Office_Net"], "Src.SessionCount": 4 }, "desc": "一般事務職員" },
-      { "ip": "10.90.1.31", "attributes": { "Src.Role": "Staff", "Src.Dept": "Library", "Src.TrustScore": 65, "Src.Groups": ["Staff", "Librarian"], "Src.SessionCount": 2 }, "desc": "図書館職員" },
+      { "ip": "10.90.1.10", "attributes": { "Src.Role": "Admin", "Src.Dept": "IT_Support", "Src.TrustScore": 99, "Src.Groups": ["SysAdmin", "Root_Access"] }, "desc": "ネットワーク管理者端末" },
+      { "ip": "10.90.1.20", "attributes": { "Src.Role": "Admin", "Src.Dept": "HR", "Src.TrustScore": 85, "Src.Groups": ["Staff", "HR_Manager"] }, "desc": "人事システム管理者" },
+      { "ip": "10.90.1.30", "attributes": { "Src.Role": "Staff", "Src.Dept": "AdminOffice", "Src.TrustScore": 70, "Src.Groups": ["Staff", "Office_Net"] }, "desc": "一般事務職員" },
+      { "ip": "10.90.1.31", "attributes": { "Src.Role": "Staff", "Src.Dept": "Library", "Src.TrustScore": 65, "Src.Groups": ["Staff", "Librarian"] }, "desc": "図書館職員" },
     
-      { "ip": "192.168.1.1", "attributes": { "Src.Role": "Guest", "Src.Dept": "Visitor", "Src.TrustScore": 5, "Src.Groups": ["Guest_WiFi"], "Src.SessionCount": 1 }, "desc": "一般ゲスト" },
-      { "ip": "192.168.1.2", "attributes": { "Src.Role": "Guest", "Src.Dept": "Visitor", "Src.TrustScore": 10, "Src.Groups": ["Guest_WiFi", "Conf_Room_A"], "Src.SessionCount": 8 }, "desc": "会議室利用者" },
-      { "ip": "172.16.5.5",  "attributes": { "Src.Role": "Vendor", "Src.Dept": "Ext_Company", "Src.TrustScore": 30, "Src.Groups": ["Vendor_VPN", "Maint_Group"], "Src.SessionCount": 1 }, "desc": "保守ベンダー（VPN接続）" },
-      { "ip": "10.20.50.99", "attributes": { "Src.Role": "Professor", "Src.Dept": "CS", "Src.TrustScore": 90, "Src.Groups": ["Faculty"], "Src.SessionCount": 500 }, "desc": "【異常】乗っ取られた教授PC（スコアは高いがセッション爆発）" }
+      { "ip": "192.168.1.1", "attributes": { "Src.Role": "Guest", "Src.Dept": "Visitor", "Src.TrustScore": 5, "Src.Groups": ["Guest_WiFi"] }, "desc": "一般ゲスト" },
+      { "ip": "192.168.1.2", "attributes": { "Src.Role": "Guest", "Src.Dept": "Visitor", "Src.TrustScore": 10, "Src.Groups": ["Guest_WiFi", "Conf_Room_A"] }, "desc": "会議室利用者" },
+      { "ip": "172.16.5.5",  "attributes": { "Src.Role": "Vendor", "Src.Dept": "Ext_Company", "Src.TrustScore": 30, "Src.Groups": ["Vendor_VPN", "Maint_Group"] }, "desc": "保守ベンダー（VPN接続）" },
+      { "ip": "10.20.50.99", "attributes": { "Src.Role": "Professor", "Src.Dept": "CS", "Src.TrustScore": 90, "Src.Groups": ["Faculty"] }, "desc": "【異常】乗っ取られた教授PC（スコアは高いがセッション爆発）" }
     ],
     "destination_entities": [
       { "ip": "172.20.10.1", "attributes": { "Dst.Type": "WebServer", "Dst.OwnerDept": "AdminOffice", "Dst.Sensitivity": 1, "Dst.AllowedVLANs": ["Any"] }, "desc": "大学公式サイト（公開）" },

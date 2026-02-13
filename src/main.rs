@@ -15,6 +15,7 @@ use abac_lab::attr_val::*;
 use ip_based::entity::{AttributeValue, SourceEntity, DestinationEntity, SourceEntityAttributeKey, DestinationEntityAttributeKey};
 use ip_based::rule::*;
 use ip_based::classifier::*;
+use ip_based::encode_attr::*;
 
 use serde_json::Value;
 
@@ -41,6 +42,16 @@ fn main() {
         for rule_id in rules {
             println!("  {}", rule_id);
         }
+    }
+
+    let attr_id = AttrIdMap::load("data/ip_based_abac_attr_id.json").expect("attr_id load");
+    for src in &data.source_entities {
+        let encoded = encode_source_entity(&attr_id, src).expect("encode source");
+        println!("Source {}: {:?}", src.ip, encoded);
+    }
+    for dest in &data.destination_entities {
+        let encoded = encode_destination_entity(&attr_id, dest).expect("encode destination");
+        println!("Destination {}: {:?}", dest.ip, encoded);
     }
     // apply_policy_rules(&data);
     // calculate_entropies(&data.source_entities, &data.destination_entities);

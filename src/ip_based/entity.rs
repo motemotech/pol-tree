@@ -110,6 +110,16 @@ impl SourceEntity {
         }
     }
 
+    pub fn deparse_attribute_key(key: &SourceEntityAttributeKey) -> Result<String, String> {
+        match key {
+            SourceEntityAttributeKey::Role => Ok("Src.Role".to_string()),
+            SourceEntityAttributeKey::Dept => Ok("Src.Dept".to_string()),
+            SourceEntityAttributeKey::TrustScore => Ok("Src.TrustScore".to_string()),
+            SourceEntityAttributeKey::Groups => Ok("Src.Groups".to_string()),
+            SourceEntityAttributeKey::SessionCount => Ok("Src.SessionCount".to_string()),
+        }
+    }
+
     fn parse_attribute_value(val: &Value) -> Result<AttributeValue, String> {
         parse_attribute_value(val)
     }
@@ -155,6 +165,15 @@ impl DestinationEntity {
             "Dst.Sensitivity" => Ok(DestinationEntityAttributeKey::Sensitivity),
             "Dst.AllowedVLANs" => Ok(DestinationEntityAttributeKey::AllowedVLANs),
             _ => Err(format!("Unknown destination attribute key: {}", key)),
+        }
+    }
+
+    pub fn deparse_attribute_key(key: &DestinationEntityAttributeKey) -> Result<String, String> {
+        match key {
+            DestinationEntityAttributeKey::Type => Ok("Dst.Type".to_string()),
+            DestinationEntityAttributeKey::OwnerDept => Ok("Dst.OwnerDept".to_string()),
+            DestinationEntityAttributeKey::Sensitivity => Ok("Dst.Sensitivity".to_string()),
+            DestinationEntityAttributeKey::AllowedVLANs => Ok("Dst.AllowedVLANs".to_string()),
         }
     }
 
