@@ -67,7 +67,8 @@
       "19": "Guest_WiFi",
       "20": "Conf_Room_A",
       "21": "Vendor_VPN",
-      "22": "Maint_Group"
+      "22": "Maint_Group",
+      "23": "Collaborator"
     }
   },
   "Dst.Type": {

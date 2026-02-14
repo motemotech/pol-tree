@@ -33,7 +33,7 @@ struct LoadedData {
 fn main() {
     let data = load_entities_and_policy();
     let applicable_rules = list_applicable_rules_per_dest_entity(
-        &[data.policy],
+        std::slice::from_ref(&data.policy),
         &data.destination_entities,
     );
     println!("Applicable policies per destination entity:");
@@ -53,10 +53,28 @@ fn main() {
         "Src.Groups"
     ];
 
+    let trust_score_thresholds = [0i64, 50, 80];
+
     for src in &data.source_entities {
         let encoded = encode_source_entity(&attr_id, src).expect("encode source");
         let bits = encoded_source_to_bit_arrays(&attr_id, &encoded, &source_attr_order).expect("bit arrays");
         println!("Source {}: {:?}", src.ip, bits);
+    }
+
+    let dest_bits = ip_based::classifier::build_dest_requirement_bits(
+        std::slice::from_ref(&data.policy),
+        &data.destination_entities,
+        &attr_id,
+        &source_attr_order,
+        &trust_score_thresholds,
+    ).expect("dest requirement bits");
+    println!("\nDest requirement bits (key):");
+    for (dest_ip, bits_per_attr, _) in &dest_bits {
+        println!("{} => {{", dest_ip);
+        for (attr_name, bit_str) in bits_per_attr {
+            println!("  \"{}\": \"{}\"", attr_name, bit_str);
+        }
+        println!("}}");
     }
 
 }
