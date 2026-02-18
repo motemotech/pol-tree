@@ -225,27 +225,6 @@ pub fn encoded_source_to_bit_arrays(
     Ok(out)
 }
 
-pub fn requirement_ge_to_threshold_bits(threshold: i64, thresholds: &[i64]) -> u32 {
-    let mut bits = 0u32;
-    for (i, &t) in thresholds.iter().enumerate() {
-        if i < 32 && threshold <= t {
-            bits |= 1u32 << i;
-        }
-    }
-    bits
-}
-
-pub fn requirement_lt_to_threshold_bits(threshold: i64, thresholds: &[i64]) -> u32 {
-    let mut bits = 0u32;
-    for (i, &t) in thresholds.iter().enumerate() {
-        if i < 32 && t == threshold {
-            bits |= 1u32 << i;
-            break;
-        }
-    }
-    bits
-}
-
 fn requirement_to_bits(
     map: &AttrIdMap,
     attr_name: &str,
@@ -255,8 +234,6 @@ fn requirement_to_bits(
     if reqs.is_empty() {
         return Ok(None);
     }
-
-    let entry = map.entries.get(attr_name).ok_or_else(|| format!("Unknown attr: {}", attr_name))?;
 
     let mut exact_bits: Option<u32> = None;
     let mut containment_bits: Option<u32> = None;
@@ -270,10 +247,10 @@ fn requirement_to_bits(
                     EncodedAttributeValue::SingleId(id) => *id,
                     _ => return Err("Exact requirement must be single value".into())
                 };
-                if id >= 32 {
+                if id as u64 > u32::MAX as u64 {
                     return Err(format!("Attribute id {} does not fit in 32 bits", id));
                 }
-                let b = 1u32 << id;
+                let b = id as u32;
                 exact_bits = Some(exact_bits.map_or(b, |x| x | b));
             }
             SrcRequirement::Containment { attr, allowed_set } if attr.as_str() == attr_name => {
@@ -288,17 +265,12 @@ fn requirement_to_bits(
                 containment_bits = Some(containment_bits.map_or(bits, |x| x | bits));
             }
             SrcRequirement::Numeric { attr, required_ge, required_lt } if attr.as_str() == attr_name => {
-                let thresholds = numeric_thresholds
-                    .get(attr_name)
-                    .map(|v| v.as_slice())
-                    .unwrap_or(&[]);
-                let mut bits = !0u32;
-                for &t in required_ge {
-                    bits &= requirement_ge_to_threshold_bits(t, thresholds);
-                }
-                for &t in required_lt {
-                    bits &= requirement_lt_to_threshold_bits(t, thresholds);
-                }
+                let ge_val = required_ge.iter().max().copied().unwrap_or(0);
+                let lt_val = required_lt.iter().max().copied().unwrap_or(i64::MAX);
+
+                let ge_u = ge_val.clamp(0, 0xFFFFi64) as u32;
+                let lt_u = lt_val.clamp(0, 0xFFFFi64) as u32;
+                let bits = (lt_u << 16) | ge_u;
                 numeric_bits = Some(numeric_bits.map_or(bits, |a| a & bits));
             }
             _ => {}
