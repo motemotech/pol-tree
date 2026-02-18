@@ -16,6 +16,7 @@ use ip_based::entity::{AttributeValue, SourceEntity, DestinationEntity, SourceEn
 use ip_based::rule::*;
 use ip_based::classifier::*;
 use ip_based::encoder::*;
+use ip_based::rule_requirements::*;
 
 use serde_json::Value;
 
@@ -38,7 +39,7 @@ fn main() {
         &data.destination_entities,
     );
     
-    for (dest_ip, rules) in applicable_rules {
+    for (dest_ip, rules) in &applicable_rules {
         println!("Destination IP: {}", dest_ip);
         for rule_id in rules {
             println!("  {}", rule_id);
@@ -60,6 +61,35 @@ fn main() {
         let encoded = encode_source_entity(&attr_id, src).expect("encode source");
         let bits = encoded_source_to_bit_arrays(&attr_id, &encoded, &source_attr_order).expect("bit arrays");
         println!("Source {}: {:?}", src.ip, bits);
+    }
+
+    let mut numeric_thresholds = HashMap::new();
+    numeric_thresholds.insert("Src.TrustScore".to_string(), vec![0, 50, 80]);
+
+    for (dest_ip, rule_ids) in &applicable_rules {
+        let dest_entity = data.destination_entities
+            .iter()
+            .find(|d| d.ip == *dest_ip)
+            .expect("dest entity");
+
+        for rule_id in rule_ids {
+            let rule = data.policy.rules
+                .iter()
+                .find(|r| r.id == *rule_id)
+                .expect("rule");
+
+            let requirements = collect_src_requirements(&rule.condition, dest_entity)
+                .expect("collect requirements");
+
+            let bits = requirements_to_bit_arrays(
+                &attr_id,
+                &requirements,
+                &source_attr_order,
+                &numeric_thresholds,
+            ).expect("requirements to bits");
+
+            println!("Dest {} Rule {}: {:?}", dest_ip, rule_id, bits);
+        }
     }
 
 }

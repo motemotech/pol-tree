@@ -7,7 +7,7 @@ use crate::ip_based::entity::{
     SourceEntityAttributeKey, DestinationEntityAttributeKey,
 };
 
-use crate::ip_based::rule_requirements::MergedRequirements;
+use crate::ip_based::rule_requirements::SrcRequirement;
 
 #[derive(Debug, Clone)]
 pub enum AttrValueType {
@@ -225,16 +225,6 @@ pub fn encoded_source_to_bit_arrays(
     Ok(out)
 }
 
-pub fn numeric_to_threshold_bits(value: i64, thresholds: &[i64]) -> u32 {
-    let mut bits = 0u32;
-    for (i, &t) in thresholds.iter().enumerate() {
-        if i < 32 && value <= t {
-            bits |= 1u32 << i;
-        }
-    }
-    bits
-}
-
 pub fn requirement_ge_to_threshold_bits(threshold: i64, thresholds: &[i64]) -> u32 {
     let mut bits = 0u32;
     for (i, &t) in thresholds.iter().enumerate() {
@@ -256,184 +246,90 @@ pub fn requirement_lt_to_threshold_bits(threshold: i64, thresholds: &[i64]) -> u
     bits
 }
 
-#[derive(Debug, Clone)]
-pub struct KeySemantics {
-    pub use_trust_score_threshold: bool,
+fn requirement_to_bits(
+    map: &AttrIdMap,
+    attr_name: &str,
+    reqs: &[SrcRequirement],
+    numeric_thresholds: &HashMap<String, Vec<i64>>,
+) -> Result<Option<u32>, String> {
+    if reqs.is_empty() {
+        return Ok(None);
+    }
+
+    let entry = map.entries.get(attr_name).ok_or_else(|| format!("Unknown attr: {}", attr_name))?;
+
+    let mut exact_bits: Option<u32> = None;
+    let mut containment_bits: Option<u32> = None;
+    let mut numeric_bits: Option<u32> = None;
+
+    for r in reqs {
+        match r {
+            SrcRequirement::Exact { attr, value } if attr.as_str() == attr_name => {
+                let encoded = encode_value(map, attr, value)?;
+                let id = match &encoded {
+                    EncodedAttributeValue::SingleId(id) => *id,
+                    _ => return Err("Exact requirement must be single value".into())
+                };
+                if id >= 32 {
+                    return Err(format!("Attribute id {} does not fit in 32 bits", id));
+                }
+                let b = 1u32 << id;
+                exact_bits = Some(exact_bits.map_or(b, |x| x | b));
+            }
+            SrcRequirement::Containment { attr, allowed_set } if attr.as_str() == attr_name => {
+                let mut bits = 0u32;
+                for s in allowed_set {
+                    let id = map.value_to_id(attr, s)?;
+                    if id >= 32 {
+                        return Err(format!("Attribute id {} does not fit in 32 bits", id));
+                    }
+                    bits |= 1u32 << id;
+                }
+                containment_bits = Some(containment_bits.map_or(bits, |x| x | bits));
+            }
+            SrcRequirement::Numeric { attr, required_ge, required_lt } if attr.as_str() == attr_name => {
+                let thresholds = numeric_thresholds
+                    .get(attr_name)
+                    .map(|v| v.as_slice())
+                    .unwrap_or(&[]);
+                let mut bits = !0u32;
+                for &t in required_ge {
+                    bits &= requirement_ge_to_threshold_bits(t, thresholds);
+                }
+                for &t in required_lt {
+                    bits &= requirement_lt_to_threshold_bits(t, thresholds);
+                }
+                numeric_bits = Some(numeric_bits.map_or(bits, |a| a & bits));
+            }
+            _ => {}
+        }
+    }
+
+    if let Some(b) = exact_bits {
+        return Ok(Some(b));
+    }
+    if let Some(b) = containment_bits {
+        return Ok(Some(b));
+    }
+    if let Some(b) = numeric_bits {
+        return Ok(Some(b));
+    }
+    Ok(None)
 }
 
-pub fn merged_requirements_to_key_bits(
+pub fn requirements_to_bit_arrays(
     map: &AttrIdMap,
-    merged: &MergedRequirements,
-    source_attr_order: &[&str],
-    trust_score_thresholds: &[i64],
-) -> Result<(String, KeySemantics), String> {
-    let mut buf = String::with_capacity(32 * 5);
-    let mut use_trust_score_threshold = false;
-
-    for &name in source_attr_order {
-        let u = match name {
-            "Src.Role" => {
-                if merged.role_allowed.is_empty() {
-                    0u32
-                } else if merged.role_allowed.len() == 1 {
-                    map.value_to_id(name, &merged.role_allowed[0])?
-                } else {
-                    let mut mask = 0u32;
-                    for s in &merged.role_allowed {
-                        let id = map.value_to_id(name, s)?;
-                        if id < 32 {
-                            mask |= 1u32 << id;
-                        }
-                    }
-                    mask
-                }
-            }
-            "Src.Dept" => {
-                if merged.dept_allowed.is_empty() {
-                    0u32
-                } else if merged.dept_allowed.len() == 1 {
-                    map.value_to_id(name, &merged.dept_allowed[0])?
-                } else {
-                    let mut mask = 0u32;
-                    for s in &merged.dept_allowed {
-                        let id = map.value_to_id(name, s)?;
-                        if id < 32 {
-                            mask |= 1u32 << id;
-                        }
-                    }
-                    mask
-                }
-            }
-            "Src.TrustScore" => {
-                if !merged.trust_score_required_ge.is_empty() || !merged.trust_score_required_lt.is_empty() {
-                    use_trust_score_threshold = true;
-                    0u32
-                } else {
-                    0u32
-                }
-            }
-            "Src.Groups" => {
-                let mut mask = 0u32;
-                for s in &merged.groups_allowed {
-                    let id = map.value_to_id(name, s)?;
-                    if id < 32 {
-                        mask |= 1u32 << id;
-                    }
-                }
-                mask
-            }
-            _ => 0u32,
-        };
-        buf.push_str(&u32_to_bit_string(u));
+    requirements: &[SrcRequirement],
+    attr_order: &[&str],
+    numeric_thresholds: &HashMap<String, Vec<i64>>,
+) -> Result<Vec<String>, String> {
+    let mut out = Vec::with_capacity(attr_order.len());
+    for &name in attr_order {
+        let bits = requirement_to_bits(map, name, requirements, numeric_thresholds)?;
+        let s = bits
+            .map(u32_to_bit_string)
+            .unwrap_or_else(|| "0".repeat(32));
+        out.push(s);
     }
-    let th_bits = if use_trust_score_threshold {
-        let mut ge_bits = 0u32;
-        for &t in &merged.trust_score_required_ge {
-            ge_bits |= requirement_ge_to_threshold_bits(t, trust_score_thresholds);
-        }
-        let mut lt_bits = 0u32;
-        for &t in &merged.trust_score_required_lt {
-            lt_bits |= requirement_lt_to_threshold_bits(t, trust_score_thresholds);
-        }
-        ge_bits
-    } else {
-        0u32
-    };
-    buf.push_str(&u32_to_bit_string(th_bits));
-
-    Ok((
-        buf,
-        KeySemantics {
-            use_trust_score_threshold,
-        },
-    ))
-}
-
-pub fn merged_requirements_to_key_bits_per_attr(
-    map: &AttrIdMap,
-    merged: &MergedRequirements,
-    source_attr_order: &[&str],
-    trust_score_thresholds: &[i64],
-) -> Result<(HashMap<String, String>, KeySemantics), String> {
-    use std::collections::HashMap;
-    let mut out: HashMap<String, String> = HashMap::new();
-    let mut use_trust_score_threshold = false;
-
-    for &name in source_attr_order {
-        let u = match name {
-            "Src.Role" => {
-                if merged.role_allowed.is_empty() {
-                    0u32
-                } else if merged.role_allowed.len() == 1 {
-                    map.value_to_id(name, &merged.role_allowed[0])?
-                } else {
-                    let mut mask = 0u32;
-                    for s in &merged.role_allowed {
-                        if let Ok(id) = map.value_to_id(name, s) {
-                            if id < 32 {
-                                mask |= 1u32 << id;
-                            }
-                        }
-                    }
-                    mask
-                }
-            }
-            "Src.Dept" => {
-                if merged.dept_allowed.is_empty() {
-                    0u32
-                } else if merged.dept_allowed.len() == 1 {
-                    map.value_to_id(name, &merged.dept_allowed[0])?
-                } else {
-                    let mut mask = 0u32;
-                    for s in &merged.dept_allowed {
-                        if let Ok(id) = map.value_to_id(name, s) {
-                            if id < 32 {
-                                mask |= 1u32 << id;
-                            }
-                        }
-                    }
-                    mask
-                }
-            }
-            "Src.TrustScore" => {
-                if !merged.trust_score_required_ge.is_empty() || !merged.trust_score_required_lt.is_empty() {
-                    use_trust_score_threshold = true;
-                    0u32
-                } else {
-                    0u32
-                }
-            }
-            "Src.Groups" => {
-                let mut mask = 0u32;
-                for s in &merged.groups_allowed {
-                    if let Ok(id) = map.value_to_id(name, s) {
-                        if id < 32 {
-                            mask |= 1u32 << id;
-                        }
-                    }
-                }
-                mask
-            }
-            _ => 0u32,
-        };
-        out.insert(name.to_string(), u32_to_bit_string(u));
-    }
-
-    if use_trust_score_threshold {
-        let mut ge_bits = 0u32;
-        for &t in &merged.trust_score_required_ge {
-            ge_bits |= requirement_ge_to_threshold_bits(t, trust_score_thresholds);
-        }
-        for &t in &merged.trust_score_required_lt {
-            ge_bits |= requirement_lt_to_threshold_bits(t, trust_score_thresholds);
-        }
-        out.insert("Src.TrustScore.Threshold".to_string(), u32_to_bit_string(ge_bits));
-    }
-
-    Ok((
-        out,
-        KeySemantics {
-            use_trust_score_threshold,
-        },
-    ))
+    Ok(out)
 }

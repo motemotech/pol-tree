@@ -14,15 +14,6 @@ pub enum SrcRequirement {
     },
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct MergedRequirements {
-    pub role_allowed: Vec<String>,
-    pub dept_allowed: Vec<String>,
-    pub trust_score_required_ge: Vec<i64>,
-    pub trust_score_required_lt: Vec<i64>,
-    pub groups_allowed: Vec<String>,
-}
-
 fn dummy_source() -> SourceEntity {
     SourceEntity {
         ip: String::new(),

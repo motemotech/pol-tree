@@ -7,13 +7,9 @@ use crate::ip_based::rule::{
 };
 use crate::ip_based::encoder::{
     AttrIdMap, 
-    merged_requirements_to_key_bits,
-    merged_requirements_to_key_bits_per_attr,
-    KeySemantics
 };
 use crate::ip_based::rule_requirements::{
     collect_src_requirements,
-    MergedRequirements
 };
 
 fn is_rule_applicable_for_dest_entity(
