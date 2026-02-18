@@ -47,9 +47,6 @@ pub fn collect_src_requirements(
     condition: &Condition,
     dest: &DestinationEntity,
 ) -> Result<Vec<SrcRequirement>, String> {
-    let dummy = dummy_source();
-    let empty: HashMap<String, AttributeValue> = HashMap::new();
-
     match condition {
         Condition::And { operands } => {
             let mut out = Vec::new();
@@ -194,65 +191,4 @@ pub fn collect_src_requirements(
             Ok(vec![])
         }
     }
-}
-
-pub fn merge_requirements(requirements: Vec<SrcRequirement>) -> Result<MergedRequirements, String> {
-    let mut out = MergedRequirements::default();
-
-    for req in requirements {
-        match req {
-            SrcRequirement::Exact { attr, value } => {
-                let s = match &value {
-                    AttributeValue::String(s) => s.clone(),
-                    _ => continue,
-                };
-                match attr.as_str() {
-                    "Src.Role" => {
-                        if !out.role_allowed.contains(&s) {
-                            out.role_allowed.push(s);
-                        }
-                    }
-                    "Src.Dept" => {
-                        if !out.dept_allowed.contains(&s) {
-                            out.dept_allowed.push(s);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            SrcRequirement::Containment { attr, allowed_set } => {
-                if attr == "Src.Groups" {
-                    for s in allowed_set {
-                        if !out.groups_allowed.contains(&s) {
-                            out.groups_allowed.push(s);
-                        }
-                    }
-                }
-            }
-            SrcRequirement::Numeric { attr, required_ge, required_lt } => {
-                if attr == "Src.TrustScore" {
-                    for t in required_ge {
-                        out.trust_score_required_ge.push(t);
-                    }
-                    for t in required_lt {
-                        out.trust_score_required_lt.push(t);
-                    }
-                }
-            }
-        }
-    }
-
-    if !out.trust_score_required_ge.is_empty() {
-        out.trust_score_required_ge.sort();
-        out.trust_score_required_ge.dedup();
-        let max_ge = *out.trust_score_required_ge.last().unwrap();
-        out.trust_score_required_ge = vec![max_ge];
-    }
-    if !out.trust_score_required_lt.is_empty() {
-        out.trust_score_required_lt.sort();
-        out.trust_score_required_lt.dedup();
-        let min_lt = *out.trust_score_required_lt.first().unwrap();
-        out.trust_score_required_lt = vec![min_lt];
-    }
-    Ok(out)
 }

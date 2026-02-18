@@ -15,7 +15,7 @@ use abac_lab::attr_val::*;
 use ip_based::entity::{AttributeValue, SourceEntity, DestinationEntity, SourceEntityAttributeKey, DestinationEntityAttributeKey};
 use ip_based::rule::*;
 use ip_based::classifier::*;
-use ip_based::encode_attr::*;
+use ip_based::encoder::*;
 
 use serde_json::Value;
 
@@ -32,11 +32,12 @@ struct LoadedData {
 
 fn main() {
     let data = load_entities_and_policy();
+
     let applicable_rules = list_applicable_rules_per_dest_entity(
         std::slice::from_ref(&data.policy),
         &data.destination_entities,
     );
-    println!("Applicable policies per destination entity:");
+    
     for (dest_ip, rules) in applicable_rules {
         println!("Destination IP: {}", dest_ip);
         for rule_id in rules {
@@ -53,28 +54,12 @@ fn main() {
         "Src.Groups"
     ];
 
-    let trust_score_thresholds = [0i64, 50, 80];
+    // let trust_score_thresholds = [0i64, 50, 80];
 
     for src in &data.source_entities {
         let encoded = encode_source_entity(&attr_id, src).expect("encode source");
         let bits = encoded_source_to_bit_arrays(&attr_id, &encoded, &source_attr_order).expect("bit arrays");
         println!("Source {}: {:?}", src.ip, bits);
-    }
-
-    let dest_bits = ip_based::classifier::build_dest_requirement_bits(
-        std::slice::from_ref(&data.policy),
-        &data.destination_entities,
-        &attr_id,
-        &source_attr_order,
-        &trust_score_thresholds,
-    ).expect("dest requirement bits");
-    println!("\nDest requirement bits (key):");
-    for (dest_ip, bits_per_attr, _) in &dest_bits {
-        println!("{} => {{", dest_ip);
-        for (attr_name, bit_str) in bits_per_attr {
-            println!("  \"{}\": \"{}\"", attr_name, bit_str);
-        }
-        println!("}}");
     }
 
 }
@@ -127,104 +112,3 @@ fn load_entities_and_policy() -> LoadedData {
         policy
     }
 }
-
-// fn apply_policy_rules(data: &LoadedData) {
-//     println!("\n=== Applying Policy ===");
-    
-//     let test_source_count = data.source_entities.len().min(20);
-//     let test_dest_count = data.destination_entities.len().min(20);
-    
-//     for (i, source) in data.source_entities.iter().take(test_source_count).enumerate() {
-//         for (j, dest) in data.destination_entities.iter().take(test_dest_count).enumerate() {
-//             println!("\n--- Test Case {}: {} -> {} ---", 
-//                 i * test_dest_count + j + 1,
-//                 source.ip, dest.ip);
-            
-//             let result = evaluate_policy(&data.policy, source, dest, &data.env);
-            
-//             match result {
-//                 Ok(effect) => {
-//                     match effect {
-//                         Effect::Allow => println!("  ✓ Access ALLOWED"),
-//                         Effect::Deny => println!("  ✗ Access DENIED"),
-//                     }
-//                 }
-//                 Err(e) => {
-//                     println!("  ⚠ Error evaluating policy: {}", e);
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// fn evaluate_policy(
-//     policy: &Policy,
-//     source: &SourceEntity,
-//     destination: &DestinationEntity,
-//     env: &HashMap<String, AttributeValue>,
-// ) -> Result<Effect, String> {
-//     for rule in &policy.rules {
-//         match rule.matches(source, destination, env) {
-//             Ok(true) => {
-//                 println!("    Rule '{}' matched: {}", rule.id, rule.description);
-//                 return Ok(rule.effect.clone());
-//             }
-//             Ok(false) => {
-//                 continue;
-//             }
-//             Err(e) => {
-//                 return Err(format!("Error evaluating rule '{}': {}", rule.id, e));
-//             }
-//         }
-//     }
-    
-//     Ok(policy.default_effect.clone())
-// }
-
-// fn calculate_entropies(
-//     source_entities: &[SourceEntity],
-//     destination_entities: &[DestinationEntity],
-// ) {
-//     println!("\n=== Calculating Attribute Entropies ===");
-
-//     println!("\n=== Source Entity Attribute Entropies ===");
-//     let source_attributes = [
-//         SourceEntityAttributeKey::Role,
-//         SourceEntityAttributeKey::Dept,
-//         SourceEntityAttributeKey::TrustScore,
-//         SourceEntityAttributeKey::Groups,
-//         SourceEntityAttributeKey::SessionCount,
-//     ];
-
-//     for attr_key in &source_attributes {
-//         let entropy = cal_source_entity_attribute_entropy(source_entities, attr_key);
-//         let attr_name = match attr_key {
-//             SourceEntityAttributeKey::Role => "Role",
-//             SourceEntityAttributeKey::Dept => "Dept",
-//             SourceEntityAttributeKey::TrustScore => "TrustScore",
-//             SourceEntityAttributeKey::Groups => "Groups",
-//             SourceEntityAttributeKey::SessionCount => "SessionCount",
-//         };
-//         println!("  {}: {:.4}", attr_name, entropy);
-//     }
-    
-//     // DestinationEntityの各属性のエントロピーを計算
-//     println!("\n--- Destination Entity Attribute Entropies ---");
-//     let dest_attributes = [
-//         DestinationEntityAttributeKey::Type,
-//         DestinationEntityAttributeKey::OwnerDept,
-//         DestinationEntityAttributeKey::Sensitivity,
-//         DestinationEntityAttributeKey::AllowedVLANs,
-//     ];
-    
-//     for attr_key in &dest_attributes {
-//         let entropy = cal_destination_entity_attribute_entropy(destination_entities, attr_key);
-//         let attr_name = match attr_key {
-//             DestinationEntityAttributeKey::Type => "Type",
-//             DestinationEntityAttributeKey::OwnerDept => "OwnerDept",
-//             DestinationEntityAttributeKey::Sensitivity => "Sensitivity",
-//             DestinationEntityAttributeKey::AllowedVLANs => "AllowedVLANs",
-//         };
-//         println!("  {}: {:.4}", attr_name, entropy);
-//     }
-// }

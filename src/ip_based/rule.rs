@@ -482,9 +482,8 @@ impl Expression {
         match self {
             Expression::LiteralString(s) => Ok(AttributeValue::String(s.clone())),
             Expression::LiteralNumber(n) => Ok(AttributeValue::Number(*n)),
-            
+
             Expression::AttributeRef(attr_name) => {
-                // "Src.Role" や "Dst.Type" から値を取得
                 if attr_name.starts_with("Src.") {
                     Self::get_source_attribute(source, attr_name)
                 } else if attr_name.starts_with("Dst.") {
